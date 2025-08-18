@@ -1,0 +1,62 @@
+using System.Collections;
+using UnityEngine;
+using TMPro;
+
+public class MenuBlink_start : MonoBehaviour
+{
+    public GameObject aButton;
+    public GameObject triangle;
+    public float interval = 0.1f;
+
+    private Coroutine blinkingCoroutine;
+    private TextMeshProUGUI menuText;
+    private Color originalColor;
+
+    void Start()
+    {
+        menuText = GetComponent<TextMeshProUGUI>();
+        if (menuText != null)
+        {
+            originalColor = menuText.color;
+        }
+    }
+
+    void Update()
+    {
+        bool isSelected = aButton.GetComponent<OnMouseDownShow_A>().isSelected;
+	int idx = triangle.GetComponent<Selector>().selectedIndex;
+
+        if (isSelected && blinkingCoroutine == null && idx == 1)
+        {
+            blinkingCoroutine = StartCoroutine(BlinkRoutine());
+        }
+        else if (!isSelected && blinkingCoroutine != null)
+        {
+            StopCoroutine(blinkingCoroutine);
+            blinkingCoroutine = null;
+            menuText.color = originalColor; // 元の色に戻す
+        }
+    }
+
+    private IEnumerator BlinkRoutine()
+    {
+        while (true)
+        {
+            SetAlpha(0f); // 非表示
+            yield return new WaitForSeconds(interval);
+
+            SetAlpha(1f); // 表示
+            yield return new WaitForSeconds(interval);
+        }
+    }
+
+    private void SetAlpha(float alpha)
+    {
+        if (menuText != null)
+        {
+            Color c = originalColor;
+            c.a = alpha;
+            menuText.color = c;
+        }
+    }
+}
