@@ -1,12 +1,15 @@
 using System.Collections;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class MenuBlink_create : MonoBehaviour
 {
     public GameObject aButton;
     public GameObject triangle;
     public float interval = 0.1f;
+    public int blinkCount = 7;
+    public string nextSceneName = "CharactorCreate01";
 
     private Coroutine blinkingCoroutine;
     private TextMeshProUGUI menuText;
@@ -40,14 +43,16 @@ public class MenuBlink_create : MonoBehaviour
 
     private IEnumerator BlinkRoutine()
     {
-        while (true)
+        for (int i = 0; i < blinkCount; i++)
         {
-            SetAlpha(0f); // 非表示
+            SetAlpha(0f);
             yield return new WaitForSeconds(interval);
 
-            SetAlpha(1f); // 表示
+            SetAlpha(1f);
             yield return new WaitForSeconds(interval);
         }
+
+	SceneManager.LoadScene(nextSceneName);
     }
 
     private void SetAlpha(float alpha)

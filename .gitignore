@@ -6,6 +6,7 @@
 /[Bb]uilds/
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
+.DS_Store
 
 # MemoryCaptures can be huge
 /[Mm]emoryCaptures/

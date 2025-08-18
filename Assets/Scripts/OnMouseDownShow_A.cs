@@ -25,15 +25,11 @@ public class OnMouseDownShow_A : MonoBehaviour, IPointerDownHandler, IPointerUpH
 
     public void OnPointerUp(PointerEventData eventData)
     {
-	int idx = 0;
-	
         if (showObject_A != null)
         {
             showObject_A.SetActive(false);
 	    GetComponent<AudioSource>().Play();
-
 	    this.isSelected = true;
-	    idx = this.triangle.GetComponent<Selector>().selectedIndex;
         }
     }
 }
