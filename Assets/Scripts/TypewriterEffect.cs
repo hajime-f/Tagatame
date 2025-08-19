@@ -16,8 +16,9 @@ public class TypewriterEffect : MonoBehaviour
     private TextMeshProUGUI textMesh;
     private string fullText;
     private Coroutine typingCoroutine;
-    private bool isTyping = false;
+    public bool isTyping = false;
     public GameObject fixedJoystick;
+    public GameObject bButton;
 
     void Awake()
     {
@@ -43,12 +44,16 @@ public class TypewriterEffect : MonoBehaviour
 	    StartTypewriter();
 	    lastIndex = selectedIndex;
 	}
-	
-        // Aボタンでスキップ（SubmitはデフォルトでキーボードEnter/Space、コントローラーのAに割り当てられることが多い）
-        if (isTyping && (Input.GetButtonDown("Submit") || Input.GetKeyDown(KeyCode.JoystickButton0)))
+
+	var bScript = bButton.GetComponent<OnMouseDownShow_B>();
+        if (isTyping && (Input.GetButtonDown("Submit") || bScript.isCanceled))
         {
             SkipToFullText();
-        }
+	    bScript.isCanceled = false;
+        } else if (!isTyping && bScript.isReturned)
+	{
+	    textMesh.text = "";           // 全文消去
+	}
     }
 
     public void SetTextByIndex(int index)
