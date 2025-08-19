@@ -4,19 +4,29 @@ using TMPro;
 
 public class TypewriterEffect : MonoBehaviour
 {
+    public enum State
+    {
+        Typing,         // タイプライター中
+        FullDisplayed,  // 全文表示中
+        ConfirmReturn,  // 「タイトルに戻りますか？」表示中
+        Idle            // 何もしていない
+    }
+
+    public State state = State.Idle;
+
     [TextArea(3, 10)]
     public string[] texts;             // 差し替え用のテキスト群
     public int selectedIndex = 0;      // 表示するテキストの番号
-    private int lastIndex = -1;
-
+    private int lastSelectedIndex = -1;
     public float delay = 0.05f;        // 1文字表示の間隔
     public AudioClip typeSound;        // タイプ音
+    public AudioClip cancelSound;
 
-    private AudioSource audioSource;   // 再生用
+    private AudioSource audioSource;
     private TextMeshProUGUI textMesh;
     private string fullText;
     private Coroutine typingCoroutine;
-    public bool isTyping = false;
+
     public GameObject fixedJoystick;
     public GameObject bButton;
 
@@ -24,44 +34,71 @@ public class TypewriterEffect : MonoBehaviour
     {
         textMesh = GetComponent<TextMeshProUGUI>();
         audioSource = gameObject.AddComponent<AudioSource>();
-
-        // 初期テキストを設定
+	audioSource.volume = 0.3f;
+	
         SetTextByIndex(selectedIndex);
-    }
-
-    void OnEnable()
-    {
         StartTypewriter();
     }
 
     void Update()
     {
-	selectedIndex = fixedJoystick.GetComponent<CharactorSelection>().selectedIndex;
+        // selectedIndex の変更を反映
+        selectedIndex = fixedJoystick.GetComponent<CharactorSelection>().selectedIndex;
 
-	if (selectedIndex != lastIndex)
+	if (selectedIndex != lastSelectedIndex)
 	{
 	    SetTextByIndex(selectedIndex);
 	    StartTypewriter();
-	    lastIndex = selectedIndex;
+	    lastSelectedIndex = selectedIndex;
 	}
-
+	
+	// Bボタンの押下を検知
 	var bScript = bButton.GetComponent<OnMouseDownShow_B>();
-        if (isTyping && (Input.GetButtonDown("Submit") || bScript.isCanceled))
+	bool isPressed = bScript.isPressed;
+
+        // キーボードやコントローラーの B ボタン入力
+        if (Input.GetButtonDown("Submit") || isPressed)
         {
-            SkipToFullText();
-	    bScript.isCanceled = false;
-        } else if (!isTyping && bScript.isReturned)
-	{
-	    textMesh.text = "";           // 全文消去
-	}
+            OnBButtonPressed();
+
+	    if (isPressed)
+	    {
+		bScript.isPressed = false;
+	    }
+        }
     }
 
-    public void SetTextByIndex(int index)
+    public void OnBButtonPressed()
     {
-		
-        if (texts != null && texts.Length > 0 && index >= 0 && index < texts.Length)
+        switch (state)
         {
-            fullText = texts[selectedIndex];
+            case State.Typing:
+                SkipToFullText();
+                state = State.FullDisplayed;
+                break;
+
+            case State.FullDisplayed:
+                // 「タイトルに戻りますか？」表示
+                textMesh.text = texts[5]; // texts[5] は確認用テキスト
+                state = State.ConfirmReturn;
+		if (cancelSound != null)
+		    audioSource.PlayOneShot(cancelSound);
+                break;
+
+            case State.ConfirmReturn:
+                // キャンセルして再度タイプライター
+                SetTextByIndex(selectedIndex);
+                StartTypewriter();
+                state = State.Typing;
+                break;
+        }
+    }
+
+    private void SetTextByIndex(int index)
+    {
+        if (texts != null && texts.Length > index)
+        {
+            fullText = texts[index];
             textMesh.text = "";
         }
         else
@@ -69,44 +106,38 @@ public class TypewriterEffect : MonoBehaviour
             Debug.LogWarning("指定されたインデックスのテキストが存在しません。");
         }
     }
-    
-    public void StartTypewriter()
+
+    private void StartTypewriter()
     {
         if (typingCoroutine != null)
-        {
             StopCoroutine(typingCoroutine);
-        }
+
         typingCoroutine = StartCoroutine(TypeText());
+        state = State.Typing;
     }
 
     private IEnumerator TypeText()
     {
-        isTyping = true;
         textMesh.text = "";
 
         foreach (char c in fullText)
         {
             textMesh.text += c;
 
-            // 文字が空白や改行でなければ音を鳴らす
             if (typeSound != null && !char.IsWhiteSpace(c))
-            {
                 audioSource.PlayOneShot(typeSound);
-            }
 
             yield return new WaitForSeconds(delay);
         }
 
-        isTyping = false;
+        state = State.FullDisplayed;
     }
 
     private void SkipToFullText()
     {
         if (typingCoroutine != null)
-        {
             StopCoroutine(typingCoroutine);
-        }
+
         textMesh.text = fullText;
-        isTyping = false;
     }
 }
