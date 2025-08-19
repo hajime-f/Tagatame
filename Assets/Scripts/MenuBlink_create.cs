@@ -8,7 +8,7 @@ public class MenuBlink_create : MonoBehaviour
     public GameObject aButton;
     public GameObject triangle;
     public float interval = 0.1f;
-    public int blinkCount = 7;
+    public int blinkCount = 10;
     public string nextSceneName = "CharactorCreate01";
 
     private Coroutine blinkingCoroutine;

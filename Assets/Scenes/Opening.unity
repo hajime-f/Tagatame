@@ -1623,7 +1623,7 @@ MonoBehaviour:
   aButton: {fileID: 1476091674}
   triangle: {fileID: 1456346311}
   interval: 0.1
-  blinkCount: 7
+  blinkCount: 10
   nextSceneName: Charactorselection
 --- !u!1 &1868476022
 GameObject:
@@ -1867,7 +1867,7 @@ MonoBehaviour:
   aButton: {fileID: 1476091674}
   triangle: {fileID: 1456346311}
   interval: 0.1
-  blinkCount: 7
+  blinkCount: 10
   nextSceneName: CharactorCreate01
 --- !u!1 &2009912861
 GameObject:
