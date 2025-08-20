@@ -7,7 +7,7 @@ public class MenuPointer : MonoBehaviour
 
     void Update()
     {
-        if (typewriterEffect.state == TypewriterEffect.State.ConfirmReturn)
+        if (typewriterEffect.state == TypewriterEffect.State.ConfirmReturn || typewriterEffect.state == TypewriterEffect.State.CharactorConfirmation)
         {
             if (!pointer.activeSelf)
 		pointer.SetActive(true);

@@ -26,14 +26,14 @@ public class MenuBlink_start : MonoBehaviour
 
     void Update()
     {
-        bool isSelected = aButton.GetComponent<OnMouseDownShow_A>().isSelected;
+        bool isPressed = aButton.GetComponent<OnMouseDownShow_A>().isPressed;
 	int idx = triangle.GetComponent<Selector>().selectedIndex;
 
-        if (isSelected && blinkingCoroutine == null && idx == 1)
+        if (isPressed && blinkingCoroutine == null && idx == 1)
         {
             blinkingCoroutine = StartCoroutine(BlinkRoutine());
         }
-        else if (!isSelected && blinkingCoroutine != null)
+        else if (!isPressed && blinkingCoroutine != null)
         {
             StopCoroutine(blinkingCoroutine);
             blinkingCoroutine = null;

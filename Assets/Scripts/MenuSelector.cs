@@ -22,7 +22,7 @@ public class MenuSelector : MonoBehaviour
 	
 	TypewriterEffect.State state = description.GetComponent<TypewriterEffect>().state;
 
-	if (state == TypewriterEffect.State.ConfirmReturn) {
+	if (state == TypewriterEffect.State.ConfirmReturn || state == TypewriterEffect.State.CharactorConfirmation) {
 	    if (verticalInput < -0.5f && !this.isStickMoved && selectedMenu != maxMenu)
 	    {
 		this.selectedMenu++;

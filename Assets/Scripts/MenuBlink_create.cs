@@ -14,6 +14,7 @@ public class MenuBlink_create : MonoBehaviour
     private Coroutine blinkingCoroutine;
     private TextMeshProUGUI menuText;
     private Color originalColor;
+    private bool audioPlayed = false;
 
     void Start()
     {
@@ -26,14 +27,19 @@ public class MenuBlink_create : MonoBehaviour
 
     void Update()
     {
-        bool isSelected = aButton.GetComponent<OnMouseDownShow_A>().isSelected;
+        bool isPressed = aButton.GetComponent<OnMouseDownShow_A>().isPressed;
 	int idx = triangle.GetComponent<Selector>().selectedIndex;
 
-        if (isSelected && blinkingCoroutine == null && idx == 0)
+	if (isPressed && !audioPlayed) {
+	    GetComponent<AudioSource>().Play();
+	    audioPlayed = true;
+	}
+	
+        if (isPressed && blinkingCoroutine == null && idx == 0)
         {
             blinkingCoroutine = StartCoroutine(BlinkRoutine());
         }
-        else if (!isSelected && blinkingCoroutine != null)
+        else if (!isPressed && blinkingCoroutine != null)
         {
             StopCoroutine(blinkingCoroutine);
             blinkingCoroutine = null;

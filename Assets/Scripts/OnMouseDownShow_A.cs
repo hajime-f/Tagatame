@@ -5,7 +5,7 @@ public class OnMouseDownShow_A : MonoBehaviour, IPointerDownHandler, IPointerUpH
 {
     public GameObject showObject_A;
     public GameObject triangle;
-    public bool isSelected = false;
+    public bool isPressed = false;
 
     void Start()
     {
@@ -28,8 +28,7 @@ public class OnMouseDownShow_A : MonoBehaviour, IPointerDownHandler, IPointerUpH
         if (showObject_A != null)
         {
             showObject_A.SetActive(false);
-	    GetComponent<AudioSource>().Play();
-	    this.isSelected = true;
+	    this.isPressed = true;
         }
     }
 }
