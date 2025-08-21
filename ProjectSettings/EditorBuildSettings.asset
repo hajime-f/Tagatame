@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/CharactorCreate01.unity
     guid: a7fa3afb1db954c468a7d2eeb43abff8
   - enabled: 1
+    path: Assets/Scenes/CharactorCreate02.unity
+    guid: faa2d0986612c44fe927b0e0922d4602
+  - enabled: 1
     path: Assets/Scenes/CharactorSelection.unity
     guid: 26566b7fb88f84f4295cb195cb66f814
   m_configObjects:

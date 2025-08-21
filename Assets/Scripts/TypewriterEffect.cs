@@ -31,6 +31,7 @@ public class TypewriterEffect : MonoBehaviour
     private Coroutine typingCoroutine;
 
     public string nextSceneName_01 = "Opening";
+    public string nextSceneName_02 = "CharactorCreate02";
     
     public GameObject fixedJoystick;
     public GameObject aButton;
@@ -131,7 +132,7 @@ public class TypewriterEffect : MonoBehaviour
 		if (selectedMenu == 0) {
 		    // オープニングに戻る
 		    if (selectSound != null)
-			StartCoroutine(PlaySoundAndLoadScene(selectSound, nextSceneName_01));
+			StartCoroutine(PlaySoundAndLoadScene(selectSound, nextSceneName_02));
 		}
 		else
 		{

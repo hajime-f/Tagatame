@@ -24,7 +24,7 @@ public class BGMManager : MonoBehaviour
         if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.loop = true;
         audioSource.playOnAwake = false;
-        audioSource.volume = 0.4f;
+        audioSource.volume = 0.35f;
     }
 
     public void PlayBGM(AudioClip clip, bool restartIfSame = false)
