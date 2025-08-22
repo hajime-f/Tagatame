@@ -22,7 +22,8 @@ public class MenuSelector_2 : MonoBehaviour
 	
 	CancelCreateConfirmation.State state = menuNav.GetComponent<CancelCreateConfirmation>().state;
 
-	if (state == CancelCreateConfirmation.State.ConfirmReturn || state == CancelCreateConfirmation.State.CharactorConfirmation) {
+	if (state == CancelCreateConfirmation.State.ConfirmReturn || state == CancelCreateConfirmation.State.CharactorConfirmation)
+	{
 	    if (verticalInput < -0.5f && !this.isStickMoved && selectedMenu != maxMenu)
 	    {
 		this.selectedMenu++;

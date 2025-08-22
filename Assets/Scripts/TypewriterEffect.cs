@@ -32,6 +32,7 @@ public class TypewriterEffect : MonoBehaviour
 
     public string nextSceneName_01 = "Opening";
     public string nextSceneName_02 = "CharactorCreate02";
+    private bool isTransitioning = false;
     
     public GameObject fixedJoystick;
     public GameObject aButton;
@@ -93,6 +94,8 @@ public class TypewriterEffect : MonoBehaviour
 
     public void OnAButtonPressed()
     {
+	if (isTransitioning) return;
+
 	var selector = menuSelector.GetComponent<MenuSelector>();
 	int selectedMenu = selector.selectedMenu;
 
@@ -123,16 +126,21 @@ public class TypewriterEffect : MonoBehaviour
 		else
 		{
 		    // オープニングに戻る
-		    if (selectSound != null)
+		    if (selectSound != null) {
+			isTransitioning = true;
 			StartCoroutine(PlaySoundAndLoadScene(selectSound, nextSceneName_01));
+		    }
 		}
                 break;
 
 	    case State.CharactorConfirmation:
 		if (selectedMenu == 0) {
-		    // オープニングに戻る
-		    if (selectSound != null)
+		    // 次のシーンに移る
+		    CharacterIndex.Instance.c_index = selectedIndex;
+		    if (selectSound != null) {
+			isTransitioning = true;
 			StartCoroutine(PlaySoundAndLoadScene(selectSound, nextSceneName_02));
+		    }
 		}
 		else
 		{

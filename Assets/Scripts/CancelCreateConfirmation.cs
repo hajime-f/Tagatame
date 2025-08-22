@@ -17,8 +17,11 @@ public class CancelCreateConfirmation : MonoBehaviour
     [TextArea(3, 10)]
     public string[] texts;
     private TextMeshProUGUI textMesh;
+    private TextMeshProUGUI textMesh_2;
     public GameObject messageBox;
     public GameObject navigationMessage;
+    public GameObject messageBox_2;
+    public GameObject navigationMessage_2;
     public GameObject parameterSelector;
     public GameObject menuSelector;
     public GameObject aButton;
@@ -26,7 +29,8 @@ public class CancelCreateConfirmation : MonoBehaviour
 
     private AudioSource audioSource;
     public AudioClip cancelSound;
-    public AudioClip selectSound;    
+    public AudioClip selectSound;
+    private bool isTransitioning = false;
 
     public string nextSceneName_01 = "CharactorCreate01";
     public string nextSceneName_02 = "Opening";
@@ -34,13 +38,20 @@ public class CancelCreateConfirmation : MonoBehaviour
     void Start()
     {
 	textMesh = navigationMessage.GetComponent<TextMeshProUGUI>();
+	textMesh_2 = navigationMessage_2.GetComponent<TextMeshProUGUI>();
 	if (messageBox.activeSelf)
 	    messageBox.SetActive(false);
+	if (messageBox_2.activeSelf)
+	    messageBox_2.SetActive(false);	
 	if (menuSelector.activeSelf)
 	    menuSelector.SetActive(false);
 	if (navigationMessage.activeSelf) {
 	    textMesh.text = "";
 	    navigationMessage.SetActive(false);
+	}
+	if (navigationMessage_2.activeSelf) {
+	    textMesh_2.text = "";
+	    navigationMessage_2.SetActive(false);
 	}
         audioSource = gameObject.AddComponent<AudioSource>();
 	audioSource.volume = 0.3f;	
@@ -74,6 +85,8 @@ public class CancelCreateConfirmation : MonoBehaviour
 
     public void OnAButtonPressed()
     {
+	if (isTransitioning) return;
+	
 	var selector = menuSelector.GetComponent<MenuSelector_2>();
 	int selectedMenu = selector.selectedMenu;
 
@@ -97,14 +110,7 @@ public class CancelCreateConfirmation : MonoBehaviour
 	    case State.ConfirmReturn:
 		if (selectedMenu == 0)
 		{
-		    if (messageBox.activeSelf)
-			messageBox.SetActive(false);
-		    if (menuSelector.activeSelf)
-			menuSelector.SetActive(false);
-		    if (navigationMessage.activeSelf) {
-			textMesh.text = "";
-			navigationMessage.SetActive(false);
-		    }
+		    HideUI();
 		    parameterSelector.GetComponent<ParameterSelector>().active = true;
 		    state = State.FullDisplayed;
 		    if (cancelSound != null)
@@ -113,21 +119,17 @@ public class CancelCreateConfirmation : MonoBehaviour
 		else
 		{
 		    if (selectSound != null)
+		    {
+			isTransitioning = true;
 			StartCoroutine(PlaySoundAndLoadScene(selectSound, nextSceneName_01));
+		    }
 		}
 		break;
 
 	    case State.CharactorConfirmation:
 		if (selectedMenu == 0)
 		{
-		    if (messageBox.activeSelf)
-			messageBox.SetActive(false);
-		    if (menuSelector.activeSelf)
-			menuSelector.SetActive(false);
-		    if (navigationMessage.activeSelf) {
-			textMesh.text = "";
-			navigationMessage.SetActive(false);
-		    }
+		    HideUI();
 		    parameterSelector.GetComponent<ParameterSelector>().active = true;
 		    state = State.FullDisplayed;
 		    if (cancelSound != null)
@@ -136,7 +138,17 @@ public class CancelCreateConfirmation : MonoBehaviour
 		else
 		{
 		    if (selectSound != null)
+		    {
+			isTransitioning = true;
+			HideUI();
+			if (!messageBox_2.activeSelf)
+			    messageBox_2.SetActive(true);
+			if (!navigationMessage_2.activeSelf) {
+			    textMesh_2.text = texts[2];
+			    navigationMessage_2.SetActive(true);
+			}
 			StartCoroutine(PlaySoundAndLoadScene(selectSound, nextSceneName_02));
+		    }
 		}
 		break;
 	}
@@ -199,6 +211,18 @@ public class CancelCreateConfirmation : MonoBehaviour
 	yield return new WaitForSeconds(clip.length); // 音が鳴り終わるまで待機
 	SceneManager.LoadScene(sceneName);
     }    
+
+    private void HideUI()
+    {
+	if (messageBox.activeSelf)
+	    messageBox.SetActive(false);
+	if (menuSelector.activeSelf)
+	    menuSelector.SetActive(false);
+	if (navigationMessage.activeSelf) {
+	    textMesh.text = "";
+	    navigationMessage.SetActive(false);
+	}
+    }
 }
 
 
