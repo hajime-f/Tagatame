@@ -26,6 +26,7 @@ public class CancelCreateConfirmation : MonoBehaviour
     public GameObject menuSelector;
     public GameObject aButton;
     public GameObject bButton;
+    public GameObject parameterAllocation;
 
     private AudioSource audioSource;
     public AudioClip cancelSound;
@@ -141,12 +142,7 @@ public class CancelCreateConfirmation : MonoBehaviour
 		    {
 			isTransitioning = true;
 			HideUI();
-			if (!messageBox_2.activeSelf)
-			    messageBox_2.SetActive(true);
-			if (!navigationMessage_2.activeSelf) {
-			    textMesh_2.text = texts[2];
-			    navigationMessage_2.SetActive(true);
-			}
+			ShowMessage(texts[2]);
 			StartCoroutine(PlaySoundAndLoadScene(selectSound, nextSceneName_02));
 		    }
 		}
@@ -222,6 +218,42 @@ public class CancelCreateConfirmation : MonoBehaviour
 	    textMesh.text = "";
 	    navigationMessage.SetActive(false);
 	}
+    }
+
+    private void ShowMessage(string text) {
+	if (!messageBox_2.activeSelf)
+	    messageBox_2.SetActive(true);
+	if (!navigationMessage_2.activeSelf) {
+	    textMesh_2.text = text;
+	    navigationMessage_2.SetActive(true);
+	}
+    }
+
+    public void OnCreateCharacter()
+    {
+	// 既存データをロード
+	SaveData data = SaveSystem.Load();
+
+	// データを取得
+	ParameterAllocator.ParamData[] param = parameterAllocation.GetComponent<ParameterAllocator>().parameters;
+	
+	// 新しいキャラクターを作成
+	CharacterData newCharacter = new CharacterData();
+	newCharacter.id = data.characters.Count + 1;
+	newCharacter.charId = CharacterIndex.Instance.c_index;
+	newCharacter.hp = param[0].currentPoints;
+	newCharacter.mp = param[1].currentPoints;
+	newCharacter.str = param[2].currentPoints;
+	newCharacter.def = param[3].currentPoints;
+	newCharacter.dex = param[4].currentPoints;
+	newCharacter.intel = param[5].currentPoints;
+	newCharacter.lck = param[6].currentPoints;
+	
+	// リストに追加
+	data.characters.Add(newCharacter);
+	
+	// 保存
+	SaveSystem.Save(data);
     }
 }
 
