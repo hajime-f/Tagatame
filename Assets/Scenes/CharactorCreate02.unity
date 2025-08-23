@@ -7352,6 +7352,7 @@ MonoBehaviour:
   menuSelector: {fileID: 778973607}
   aButton: {fileID: 884672730}
   bButton: {fileID: 1501054331}
+  parameterAllocation: {fileID: 1690366527}
   cancelSound: {fileID: 8300000, guid: 8aa3c18d2508d461697b274bceac4526, type: 3}
   selectSound: {fileID: 8300000, guid: 66f7ce1d3734e4524bfe200ff67fca74, type: 3}
   nextSceneName_01: CharactorCreate01

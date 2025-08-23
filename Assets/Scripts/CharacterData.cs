@@ -10,4 +10,6 @@ public class CharacterData
     public int dex;
     public int intel;
     public int lck;
+    public int nBattle;
+    public int nWin;
 }

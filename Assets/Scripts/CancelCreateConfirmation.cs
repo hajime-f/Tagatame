@@ -143,6 +143,7 @@ public class CancelCreateConfirmation : MonoBehaviour
 			isTransitioning = true;
 			HideUI();
 			ShowMessage(texts[2]);
+			OnCreateCharacter();
 			StartCoroutine(PlaySoundAndLoadScene(selectSound, nextSceneName_02));
 		    }
 		}
@@ -248,6 +249,8 @@ public class CancelCreateConfirmation : MonoBehaviour
 	newCharacter.dex = param[4].currentPoints;
 	newCharacter.intel = param[5].currentPoints;
 	newCharacter.lck = param[6].currentPoints;
+	newCharacter.nBattle = 0;
+	newCharacter.nWin = 0;
 	
 	// リストに追加
 	data.characters.Add(newCharacter);
