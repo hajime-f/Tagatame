@@ -55,7 +55,7 @@ public class CharacterPointer : MonoBehaviour
 	}
 	
         audioSource = gameObject.AddComponent<AudioSource>();
-	// audioSource.volume = 0.3f;	
+	audioSource.volume = 0.3f;	
     }    
     
     public void Initialize(Transform content)
@@ -74,7 +74,10 @@ public class CharacterPointer : MonoBehaviour
 
     void Update()
     {
+	RecalcBounds();
+	
         float vertical = fixedJoystick.Vertical;
+	float horizontal = fixedJoystick.Horizontal;
 
 	if (state == State.ListDisplayed) {
 	    if (vertical > 0.5f && !isStickMoved && selectedIndex > 0)
@@ -94,6 +97,18 @@ public class CharacterPointer : MonoBehaviour
 		audioSource.PlayOneShot(cursorSound);
 		UpdatePointerAndContent();
 		UpdateVisibleRows();
+	    }
+
+	    if (horizontal > 0.5f && !isStickMoved)
+	    {
+		
+	    }
+	    else if (horizontal < -0.5f && !isStickMoved)
+	    {
+		ShowUI(texts[1]);
+		state = State.ConfirmRemove;
+		if (cancelSound != null)
+		    audioSource.PlayOneShot(cancelSound);		
 	    }
 	    
 	    if (Mathf.Abs(vertical) < 0.2f) isStickMoved = false;
@@ -124,10 +139,19 @@ public class CharacterPointer : MonoBehaviour
 
     void UpdatePointerAndContent()
     {
-	int pointerPosInView = selectedIndex - topIndex;
-	RectTransform pointerRect = pointer.rectTransform;
+	if (contentParent == null) return;
+	int count = contentParent.childCount;
+	if (count == 0)
+	{
+	    if (pointer != null) pointer.gameObject.SetActive(false);
+	    return;
+	}
 	
-	float yOffset = -pointerPosInView * rowHeight + 380;
+	// ビュー内の相対位置
+	int pointerPosInView = selectedIndex - topIndex;
+	
+	RectTransform pointerRect = pointer.rectTransform;
+	float yOffset = -pointerPosInView * rowHeight + 380f; // ここはUIに合わせて調整値
 	
 	pointerRect.localPosition = new Vector3(
 	    pointerRect.localPosition.x,
@@ -138,13 +162,20 @@ public class CharacterPointer : MonoBehaviour
 
     void UpdateVisibleRows()
     {
-        // topIndex から visibleCount までの行だけアクティブ
-        for (int i = 0; i <= maxIndex; i++)
-        {
-            contentParent.GetChild(i).gameObject.SetActive(i >= topIndex && i < topIndex + visibleCount);
-        }
+	if (contentParent == null) return;
+	
+	int count = contentParent.childCount;
+	for (int i = 0; i < count; i++)  // ← i <= maxIndex は使わない
+	{
+	    bool visible = (i >= topIndex && i < topIndex + visibleCount);
+	    var child = contentParent.GetChild(i);
+	    if (child != null) child.gameObject.SetActive(visible);
+	}
+	
+	// 行が0ならポインタも隠す
+	if (pointer != null) pointer.gameObject.SetActive(count > 0);
     }
-
+    
     public void OnAButtonPressed()
     {
 	var selector = menuSelector.GetComponent<MenuSelector_3>();
@@ -153,7 +184,10 @@ public class CharacterPointer : MonoBehaviour
 	switch (state)
 	{
 	    case State.ListDisplayed:
-		break;
+		ToggleCharacterSelection(selectedIndex);
+		if (selectSound != null)
+		    audioSource.PlayOneShot(selectSound);
+		break;		
 	    
 	    case State.ConfirmReturn:
 		if (selectedMenu == 0)
@@ -169,6 +203,22 @@ public class CharacterPointer : MonoBehaviour
 			StartCoroutine(PlaySoundAndLoadScene(selectSound, nextSceneName_01));
 		}
 		break;
+
+	    case State.ConfirmRemove:
+		if (selectedMenu == 0)
+		{
+		    HideUI();
+		    state = State.ListDisplayed;
+		    if (cancelSound != null)
+			audioSource.PlayOneShot(cancelSound);
+		}
+		else
+		{
+                    HideUI();
+		    RemoveCharacter(selectedIndex);
+		    state = State.ListDisplayed;
+		}
+		break;		
 	}
 	
     }
@@ -190,6 +240,13 @@ public class CharacterPointer : MonoBehaviour
 		if (cancelSound != null)
 		    audioSource.PlayOneShot(cancelSound);
 		break;
+
+	    case State.ConfirmRemove:
+		HideUI();
+		state = State.ListDisplayed;
+		if (cancelSound != null)
+		    audioSource.PlayOneShot(cancelSound);
+		break;		
 	}
     }
 
@@ -223,4 +280,54 @@ public class CharacterPointer : MonoBehaviour
 	yield return new WaitForSeconds(clip.length); // 音が鳴り終わるまで待機
 	SceneManager.LoadScene(sceneName);
     }        
+
+    private void ToggleCharacterSelection(int index)
+    {
+	Transform row = contentParent.GetChild(index);
+	TextMeshProUGUI text = row.Find("CharacterText").GetComponent<TextMeshProUGUI>();
+	
+	if (text.text.StartsWith("▼"))
+	{
+	    text.text = text.text.Substring(1);
+	}
+	else
+	{
+	    text.text = "▼" + text.text;
+	}
+    }
+
+    public void RemoveCharacter(int indexToRemove)
+    {
+	// セーブデータから削除
+	var data = SaveSystem.Load();
+	if (data != null && data.characters != null &&
+	    indexToRemove >= 0 && indexToRemove < data.characters.Count)
+	{
+	    data.characters.RemoveAt(indexToRemove);
+	    SaveSystem.Save(data);
+	}
+	
+	// 行（UI）を削除
+	if (contentParent != null &&
+	    indexToRemove >= 0 && indexToRemove < contentParent.childCount)
+	{
+	    Destroy(contentParent.GetChild(indexToRemove).gameObject);
+	}
+	
+	// インデックス類を再計算して表示更新
+	RecalcBounds();
+	UpdateVisibleRows();
+	UpdatePointerAndContent();
+    }
+    
+    private void RecalcBounds()
+    {
+	int count = contentParent != null ? contentParent.childCount : 0;
+	
+	maxIndex = Mathf.Max(0, count - 1);
+	selectedIndex = Mathf.Clamp(selectedIndex, 0, maxIndex);
+	
+	int maxTop = Mathf.Max(0, count - visibleCount);
+	topIndex = Mathf.Clamp(topIndex, 0, maxTop);
+    }
 }
