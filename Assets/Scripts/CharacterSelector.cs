@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -15,6 +16,7 @@ public class CharacterPointer : MonoBehaviour
         ListDisplayed,  // リスト表示中
         ConfirmReturn,  // 「タイトル画面に戻りますか？」表示中
 	ConfirmRemove,  // 「キャラクターを削除していいですか？」表示中
+	NoCharacter,    // 「キャラクターがいません」表示中
 	ConfirmProceed, // 「このキャラクターで戦いますか？」表示中
     }
     public State state = State.ListDisplayed;
@@ -23,9 +25,12 @@ public class CharacterPointer : MonoBehaviour
     public string[] texts;
     
     private TextMeshProUGUI textMesh;
+    private TextMeshProUGUI textMesh_2;
     public GameObject messageBox;
     public GameObject menuSelector;
     public GameObject navigationMessage;
+    public GameObject messageBox_2;
+    public GameObject navigationMessage_2;
     public GameObject aButton;
     public GameObject bButton;
     
@@ -33,6 +38,7 @@ public class CharacterPointer : MonoBehaviour
     public AudioClip cancelSound;
     public AudioClip selectSound;
     public AudioClip cursorSound;
+    public AudioClip readySound;
     
     private int selectedIndex = 0;
     private int maxIndex;
@@ -40,11 +46,17 @@ public class CharacterPointer : MonoBehaviour
     private bool isStickMoved = false;
     private float rowHeight = 190;
 
+    private List<int> selectedIndices = new List<int>();
+    private const int MaxSelectable = 5;
+    
     public string nextSceneName_01 = "Opening";
+    public string nextSceneName_02 = "Battle";
+    private bool isTurning = false;
     
     void Start()
     {
 	textMesh = navigationMessage.GetComponent<TextMeshProUGUI>();
+	textMesh_2 = navigationMessage_2.GetComponent<TextMeshProUGUI>();
 	if (messageBox.activeSelf)
 	    messageBox.SetActive(false);
 	if (menuSelector.activeSelf)
@@ -52,6 +64,12 @@ public class CharacterPointer : MonoBehaviour
 	if (navigationMessage.activeSelf) {
 	    textMesh.text = "";
 	    navigationMessage.SetActive(false);
+	}
+	if (messageBox_2.activeSelf)
+	    messageBox_2.SetActive(false);
+	if (navigationMessage_2.activeSelf) {
+	    textMesh_2.text = "";
+	    navigationMessage_2.SetActive(false);
 	}
 	
         audioSource = gameObject.AddComponent<AudioSource>();
@@ -75,6 +93,18 @@ public class CharacterPointer : MonoBehaviour
     void Update()
     {
 	RecalcBounds();
+
+	if (contentParent.childCount == 0)
+	{
+	    if (!messageBox.activeSelf)
+		messageBox.SetActive(true);
+	    if (!navigationMessage.activeSelf) {
+		textMesh.text = texts[2];
+		navigationMessage.SetActive(true);
+	    }
+	    state = State.NoCharacter;
+	    pointer.gameObject.SetActive(false);
+	}
 	
         float vertical = fixedJoystick.Vertical;
 	float horizontal = fixedJoystick.Horizontal;
@@ -101,7 +131,13 @@ public class CharacterPointer : MonoBehaviour
 
 	    if (horizontal > 0.5f && !isStickMoved)
 	    {
-		
+		if (selectedIndices.Count >= 2)
+		{
+		    ShowUI(texts[3]);
+		    state = State.ConfirmProceed;
+		if (cancelSound != null)
+		    audioSource.PlayOneShot(cancelSound);
+		}
 	    }
 	    else if (horizontal < -0.5f && !isStickMoved)
 	    {
@@ -178,6 +214,8 @@ public class CharacterPointer : MonoBehaviour
     
     public void OnAButtonPressed()
     {
+	if (isTurning) return;
+	
 	var selector = menuSelector.GetComponent<MenuSelector_3>();
 	int selectedMenu = selector.selectedMenu;
 
@@ -186,7 +224,7 @@ public class CharacterPointer : MonoBehaviour
 	    case State.ListDisplayed:
 		ToggleCharacterSelection(selectedIndex);
 		if (selectSound != null)
-		    audioSource.PlayOneShot(selectSound);
+		    audioSource.PlayOneShot(readySound);
 		break;		
 	    
 	    case State.ConfirmReturn:
@@ -200,7 +238,10 @@ public class CharacterPointer : MonoBehaviour
 		else
 		{
 		    if (selectSound != null)
+		    {
+			isTurning = true;
 			StartCoroutine(PlaySoundAndLoadScene(selectSound, nextSceneName_01));
+		    }
 		}
 		break;
 
@@ -217,6 +258,41 @@ public class CharacterPointer : MonoBehaviour
                     HideUI();
 		    RemoveCharacter(selectedIndex);
 		    state = State.ListDisplayed;
+		    if (selectSound != null)
+			audioSource.PlayOneShot(selectSound);
+		}
+		break;
+
+	    case State.NoCharacter:
+		if (selectSound != null)
+		{
+		    isTurning = true;
+		    StartCoroutine(PlaySoundAndLoadScene(selectSound, nextSceneName_01));
+		}
+		break;
+
+	    case State.ConfirmProceed:
+		if (selectedMenu == 0)
+		{
+                    HideUI();
+		    if (!messageBox_2.activeSelf)
+			messageBox_2.SetActive(true);
+		    if (!navigationMessage_2.activeSelf) {
+			textMesh_2.text = texts[4];
+			navigationMessage_2.SetActive(true);
+		    }
+		    if (selectSound != null)
+		    {
+			isTurning = true;
+			StartCoroutine(FadeOutAndLoadScene(selectSound, nextSceneName_02));
+		    }
+		}
+		else
+		{
+		    HideUI();
+		    state = State.ListDisplayed;
+		    if (cancelSound != null)
+			audioSource.PlayOneShot(cancelSound);
 		}
 		break;		
 	}
@@ -225,6 +301,8 @@ public class CharacterPointer : MonoBehaviour
 
     public void OnBButtonPressed()
     {
+	if (isTurning) return;
+	
 	switch (state)
 	{
 	    case State.ListDisplayed:
@@ -246,7 +324,19 @@ public class CharacterPointer : MonoBehaviour
 		state = State.ListDisplayed;
 		if (cancelSound != null)
 		    audioSource.PlayOneShot(cancelSound);
-		break;		
+		break;
+		
+	    case State.NoCharacter:
+		if (selectSound != null)
+		    StartCoroutine(PlaySoundAndLoadScene(selectSound, nextSceneName_01));
+		break;
+
+	    case State.ConfirmProceed:
+		HideUI();
+		state = State.ListDisplayed;
+		if (cancelSound != null)
+		    audioSource.PlayOneShot(cancelSound);
+		break;
 	}
     }
 
@@ -284,15 +374,31 @@ public class CharacterPointer : MonoBehaviour
     private void ToggleCharacterSelection(int index)
     {
 	Transform row = contentParent.GetChild(index);
-	TextMeshProUGUI text = row.Find("CharacterText").GetComponent<TextMeshProUGUI>();
-	
-	if (text.text.StartsWith("▼"))
+	TextMeshProUGUI text1 = row.Find("CharacterText").GetComponent<TextMeshProUGUI>();
+	TextMeshProUGUI text2 = row.Find("HPText").GetComponent<TextMeshProUGUI>();
+	TextMeshProUGUI text3 = row.Find("MPText").GetComponent<TextMeshProUGUI>();
+	TextMeshProUGUI text4 = row.Find("NBattle").GetComponent<TextMeshProUGUI>();
+
+	if (selectedIndices.Contains(index))
 	{
-	    text.text = text.text.Substring(1);
+	    // 選択解除
+	    selectedIndices.Remove(index);
+	    text1.color = Color.white;
+	    text2.color = Color.white;
+	    text3.color = Color.white;
+	    text4.color = Color.white;
 	}
 	else
 	{
-	    text.text = "▼" + text.text;
+	    if (selectedIndices.Count < MaxSelectable)
+	    {
+		// 新規選択
+		selectedIndices.Add(index);
+		text1.color = Color.yellow;
+		text2.color = Color.yellow;
+		text3.color = Color.yellow;
+		text4.color = Color.yellow;
+	    }
 	}
     }
 
@@ -329,5 +435,39 @@ public class CharacterPointer : MonoBehaviour
 	
 	int maxTop = Mathf.Max(0, count - visibleCount);
 	topIndex = Mathf.Clamp(topIndex, 0, maxTop);
+    }
+
+    // BGM フェードアウト用
+    private IEnumerator FadeOutAndLoadScene(AudioClip clip, string sceneName, float fadeTime = 5f)
+    {
+	// 効果音（Ready / Select）を鳴らす
+	if (clip != null)
+	    audioSource.PlayOneShot(clip);
+	
+	// BGM を探す（例：シングルトンの BGMManager から取得しても良い）
+	AudioSource bgm = GameObject.Find("BGMManager").GetComponent<AudioSource>();
+	if (bgm != null)
+	{
+	    float startVolume = bgm.volume;
+	    
+	    // 徐々に音量を下げる
+	    float t = 0;
+	    while (t < fadeTime)
+	    {
+		t += Time.deltaTime;
+		bgm.volume = Mathf.Lerp(startVolume, 0, t / fadeTime);
+		yield return null;
+	    }
+	    
+	    bgm.Stop();
+	    bgm.volume = startVolume; // 次のシーン用に戻しておく
+	}
+	
+	// 効果音が鳴り終わるまで待機
+	if (clip != null)
+	    yield return new WaitForSeconds(clip.length);
+	
+	// シーン遷移
+	SceneManager.LoadScene(sceneName);
     }
 }
