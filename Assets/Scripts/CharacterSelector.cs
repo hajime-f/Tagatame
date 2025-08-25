@@ -52,7 +52,7 @@ public class CharacterPointer : MonoBehaviour
     public string nextSceneName_01 = "Opening";
     public string nextSceneName_02 = "Battle";
     private bool isTurning = false;
-    
+
     void Start()
     {
 	textMesh = navigationMessage.GetComponent<TextMeshProUGUI>();
@@ -281,6 +281,7 @@ public class CharacterPointer : MonoBehaviour
 			textMesh_2.text = texts[4];
 			navigationMessage_2.SetActive(true);
 		    }
+		    SelectedCharacters.Instance.Indices = selectedIndices;
 		    if (selectSound != null)
 		    {
 			isTurning = true;
