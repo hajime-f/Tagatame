@@ -227,6 +227,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a48c1a596e18f4dacb051559564716ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BattleManager
+  navigationMessage: {fileID: 1455427672}
+  typeSound: {fileID: 8300000, guid: bb4c7a1e8498f40c6981532a9395a968, type: 3}
 --- !u!4 &321731743
 Transform:
   m_ObjectHideFlags: 0
